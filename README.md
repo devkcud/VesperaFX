@@ -10,7 +10,12 @@ flexible color adjustments.\
 Designed for retro visuals, game feel tweaking, and full control over your
 post-FX pipeline.
 
-![Shader Demo](demo/demo.gif)
+<p align="center">
+    <img src="demo/demo.gif" alt="Shader Demo">
+</p>
+
+> This demo gif is low-res for size reasons. The actual shader looks crisp and
+> clean in-game.
 
 ## 🎨 Features
 
@@ -36,8 +41,7 @@ post-FX pipeline.
 ```
 
 4. Copy relevant logic from
-   [`void fragment()` in `main.gdshader`](main.gdshader) or build your
-   own.
+   [`void fragment()` in `main.gdshader`](main.gdshader) or build your own.
 
 ## 🧪 Usage Notes
 
