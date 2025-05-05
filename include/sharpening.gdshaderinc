@@ -97,4 +97,19 @@ vec3 apply_sharpen_naive(sampler2D tex, vec2 uv, vec2 pixel_size) {
 	return clamp(sharpened, 0.0, 1.0);
 }
 
+vec3 apply_sharpen_by_kernel(sampler2D tex, vec2 uv, vec2 pixel_size) {
+	switch (u_sharpen_kernel) {
+		case 1:
+			return apply_sharpen_naive(tex, uv, pixel_size);
+		case 2:
+			return apply_sharpen_unsharp_mask(tex, uv, pixel_size);
+		case 3:
+			return apply_sharpen_edge_aware(tex, uv, pixel_size);
+		case 4:
+			return apply_sharpen_high_boost(tex, uv, pixel_size);
+		default:
+			return texture(tex, uv).rgb;
+	}
+}
+
 #endif
