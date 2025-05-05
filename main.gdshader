@@ -1,0 +1,121 @@
+shader_type canvas_item;
+render_mode unshaded;
+
+#define ENABLE_DITHERING
+#define ENABLE_PALETTE_MAPPING
+#define ENABLE_PIXELATION
+#define ENABLE_SHARPENING
+#define ENABLE_COLOR_ADJUST
+
+/** Allows both pixelation and sharpening to be applied simultaneously.
+ * This is discouraged, as it often produces visual artifacts and wastes performance.
+ * Enable only if you know exactly what you're doing (and why).
+ */
+//#define ALLOW_PIXELATION_SHARPEN_COMBO
+
+/** Change from "Dithering -> Palette Mapping" to "Palette Mapping -> Dithering" */
+//#define REVERSE_DITHER_PALETTE_MAPPING
+
+uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_disable;
+
+#ifdef ENABLE_DITHERING
+#include "include/dither.gdshaderinc"
+#endif
+
+#ifdef ENABLE_PALETTE_MAPPING
+#include "include/palette.gdshaderinc"
+#endif
+
+#ifdef ENABLE_PIXELATION
+#include "include/pixelation.gdshaderinc"
+#endif
+
+#ifdef ENABLE_SHARPENING
+#include "include/sharpening.gdshaderinc"
+#endif
+
+#ifdef ENABLE_COLOR_ADJUST
+#include "include/rendering.gdshaderinc"
+#endif
+
+void fragment() {
+	vec2 uv = SCREEN_UV;
+	vec2 pixel_coord = FRAGCOORD.xy;
+
+	#ifdef ENABLE_PIXELATION
+	if (u_pixelation_enabled) {
+		pixel_coord = get_pixelated_coord(FRAGCOORD.xy, u_pixelation_size);
+		uv = to_pixelated_uv(SCREEN_PIXEL_SIZE, SCREEN_UV, u_pixelation_size);
+	}
+	#endif
+
+	vec3 color = texture(screen_texture, uv).rgb;
+
+	#ifdef ENABLE_COLOR_ADJUST
+	if (u_rendering_gamma_correction_input_enabled) {
+		color = gamma_correction_input(color, u_rendering_gamma);
+	}
+	#endif
+
+	#ifdef ENABLE_SHARPENING
+	if (u_sharpen_kernel != 0
+		#ifdef ENABLE_PIXELATION
+		&& (!u_pixelation_enabled
+		#ifdef ALLOW_PIXELATION_SHARPEN_COMBO
+		|| true
+		#endif
+		)
+		#endif
+	) {
+		switch (u_sharpen_kernel) {
+			case 1:
+				color = apply_sharpen_naive(screen_texture, uv, SCREEN_PIXEL_SIZE);
+				break;
+			case 2:
+				color = apply_sharpen_unsharp_mask(screen_texture, uv, SCREEN_PIXEL_SIZE);
+				break;
+			case 3:
+				color = apply_sharpen_edge_aware(screen_texture, uv, SCREEN_PIXEL_SIZE);
+				break;
+			case 4:
+				color = apply_sharpen_high_boost(screen_texture, uv, SCREEN_PIXEL_SIZE);
+				break;
+		}
+	}
+	#endif
+
+	// Dithering -> Palette Mapping: First, the scene's lighting gets dithered, then palette mapping is applied on top of that.
+	// Toggleable by defining REVERSE_DITHER_PALETTE_MAPPING
+
+	#if not defined(REVERSE_DITHER_PALETTE_MAPPING) && defined(ENABLE_DITHERING)
+	color = apply_dithering(color, pixel_coord, u_dither_blue_noise_texture);
+	#endif
+
+	#ifdef ENABLE_PALETTE_MAPPING
+	if (u_palette_shading_enabled) {
+		color = (
+			u_palette_match_rgb
+				? apply_palette_mapping_rgb(color)
+				: apply_palette_mapping_luminance(color)
+		);
+	}
+	#endif
+
+	#if defined(REVERSE_DITHER_PALETTE_MAPPING) && defined(ENABLE_DITHERING)
+	color = apply_dithering(color, pixel_coord, u_dither_blue_noise_texture);
+	#endif
+
+	#ifdef ENABLE_COLOR_ADJUST
+	color = adjust_hue_shift(color, u_rendering_hue_shift);
+	color = adjust_saturation(color, u_rendering_saturation);
+	color = adjust_contrast(color, u_rendering_contrast);
+	#endif
+
+	#ifdef ENABLE_COLOR_ADJUST
+	if (u_rendering_gamma_correction_output_enabled) {
+		color = gamma_correction_output(color, u_rendering_gamma);
+	}
+	#endif
+
+	COLOR = vec4(color, 1.0);
+}
