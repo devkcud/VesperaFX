@@ -29,21 +29,21 @@ float _get_bayer_threshold(vec2 pixel_coord) {
 	return BAYER_MATRIX[idx] * BAYER_DIVISOR;
 }
 
-vec3 _dither_bayer(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
+vec3 dither_bayer(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
 	float threshold = _get_bayer_threshold(pixel_coord);
 	vec3 adjusted = color + (threshold - 0.5) * range_scale;
 
 	return floor(adjusted * quantize_scale + 0.5) * range_scale;
 }
 
-vec3 _dither_noise(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
+vec3 dither_noise(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
 	float noise = fract(sin(dot(pixel_coord, vec2(12.9898, 78.233))) * 43758.5453);
 	vec3 adjusted = color + (noise - 0.5) * range_scale;
 
 	return floor(adjusted * quantize_scale + 0.5) * range_scale;
 }
 
-vec3 _dither_floyd_steinberg(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
+vec3 dither_floyd_steinberg(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
 	// TODO: Implement correct Faux Floyd-Steinberg dithering
 
 	vec2 offset = vec2(mod(pixel_coord.y, 2.0), mod(pixel_coord.x + pixel_coord.y, 2.0));
@@ -54,7 +54,7 @@ vec3 _dither_floyd_steinberg(vec3 color, vec2 pixel_coord, float range_scale, fl
 	return floor(adjusted * quantize_scale + 0.5) * range_scale;
 }
 
-vec3 _dither_blue_noise(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale, sampler2D blue_noise_texture) {
+vec3 dither_blue_noise(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale, sampler2D blue_noise_texture) {
 	ivec2 blue_noise_size = textureSize(blue_noise_texture, 0);
 
 	if (blue_noise_size.x > 0 && blue_noise_size.y > 0 && blue_noise_size.x == blue_noise_size.y) {
@@ -68,7 +68,7 @@ vec3 _dither_blue_noise(vec3 color, vec2 pixel_coord, float range_scale, float q
 	return color;
 }
 
-vec3 apply_dithering(vec3 color, vec2 pixel_coord, sampler2D blue_noise_texture) {
+vec3 apply_dithering_by_mode(vec3 color, vec2 pixel_coord, sampler2D blue_noise_texture) {
 	if (u_dither_level < 1) {
 		return color;
 	}
@@ -78,18 +78,18 @@ vec3 apply_dithering(vec3 color, vec2 pixel_coord, sampler2D blue_noise_texture)
 	vec3 dithered = color; // Defaults to color input
 
 	switch (u_dither_mode) {
-	case 1: // Bayer
-		dithered = _dither_bayer(color, pixel_coord, range_scale, quantize_scale);
-		break;
-	case 2: // Noise
-		dithered = _dither_noise(color, pixel_coord, range_scale, quantize_scale);
-		break;
-	case 3: // Faux Floyd-Steinberg
-		dithered = _dither_floyd_steinberg(color, pixel_coord, range_scale, quantize_scale);
-		break;
-	case 4: // Blue Noise
-		dithered = _dither_blue_noise(color, pixel_coord, range_scale, quantize_scale, blue_noise_texture);
-		break;
+		case 1: // Bayer
+			dithered = dither_bayer(color, pixel_coord, range_scale, quantize_scale);
+			break;
+		case 2: // Noise
+			dithered = dither_noise(color, pixel_coord, range_scale, quantize_scale);
+			break;
+		case 3: // Faux Floyd-Steinberg
+			dithered = dither_floyd_steinberg(color, pixel_coord, range_scale, quantize_scale);
+			break;
+		case 4: // Blue Noise
+			dithered = dither_blue_noise(color, pixel_coord, range_scale, quantize_scale, blue_noise_texture);
+			break;
 	}
 
 	return clamp(dithered, 0.0, 1.0);
