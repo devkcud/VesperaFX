@@ -8,8 +8,7 @@ render_mode unshaded;
 #define ENABLE_COLOR_ADJUST
 
 /** Allows both pixelation and sharpening to be applied simultaneously.
- * This is discouraged, as it often produces visual artifacts and wastes performance.
- * Enable only if you know exactly what you're doing (and why).
+ * This is discouraged, as it often produces visual artifacts.
  */
 //#define ALLOW_PIXELATION_SHARPEN_COMBO
 
@@ -38,6 +37,16 @@ uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_d
 #include "include/rendering.gdshaderinc"
 #endif
 
+#ifdef ENABLE_SHARPENING
+bool _should_sharpen() {
+	#if defined(ENABLE_PIXELATION) && !defined(ALLOW_PIXELATION_SHARPEN_COMBO)
+		return !u_pixelation_enabled;
+	#else
+		return true;
+	#endif
+}
+#endif
+
 void fragment() {
 	vec2 uv = SCREEN_UV;
 	vec2 pixel_coord = FRAGCOORD.xy;
@@ -58,29 +67,8 @@ void fragment() {
 	#endif
 
 	#ifdef ENABLE_SHARPENING
-	if (u_sharpen_kernel != 0
-		#ifdef ENABLE_PIXELATION
-		&& (!u_pixelation_enabled
-		#ifdef ALLOW_PIXELATION_SHARPEN_COMBO
-		|| true
-		#endif
-		)
-		#endif
-	) {
-		switch (u_sharpen_kernel) {
-			case 1:
-				color = apply_sharpen_naive(screen_texture, uv, SCREEN_PIXEL_SIZE);
-				break;
-			case 2:
-				color = apply_sharpen_unsharp_mask(screen_texture, uv, SCREEN_PIXEL_SIZE);
-				break;
-			case 3:
-				color = apply_sharpen_edge_aware(screen_texture, uv, SCREEN_PIXEL_SIZE);
-				break;
-			case 4:
-				color = apply_sharpen_high_boost(screen_texture, uv, SCREEN_PIXEL_SIZE);
-				break;
-		}
+	if (u_sharpen_kernel != 0 && _should_sharpen()) {
+		color = apply_sharpen_by_kernel(screen_texture, uv, SCREEN_PIXEL_SIZE);
 	}
 	#endif
 
@@ -88,7 +76,7 @@ void fragment() {
 	// Toggleable by defining REVERSE_DITHER_PALETTE_MAPPING
 
 	#if not defined(REVERSE_DITHER_PALETTE_MAPPING) && defined(ENABLE_DITHERING)
-	color = apply_dithering(color, pixel_coord, u_dither_blue_noise_texture);
+	color = apply_dithering_by_mode(color, pixel_coord, u_dither_blue_noise_texture);
 	#endif
 
 	#ifdef ENABLE_PALETTE_MAPPING
