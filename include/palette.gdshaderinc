@@ -4,15 +4,26 @@
 #define PALETTE
 
 uniform sampler2D u_palette_color_texture : filter_nearest;
+/** Optional precomputed LUT texture for fast RGB palette lookups.
+ * The texture should be laid out as a 3D LUT where the width is
+ * `size * size` and the height is `size * rows`.
+ * When enabled, the LUT is used instead of brute-force RGB matching.
+ */
+uniform sampler2D u_palette_lut_texture : filter_nearest;
 
 uniform bool u_palette_shading_enabled = true;
+
+/** Use LUT mapping when true. */
+uniform bool u_palette_use_lut = false;
+/** Dimension size for the LUT texture layout. */
+uniform int u_palette_lut_size = 16;
 
 /** Enables brute-force RGB color matching against the palette.
  * This is significantly slower than luminance-based mapping, particularly with large palettes.
  *
  * Recommended: Use only when precise color fidelity is needed (e.g. stylized or vibrant palettes).
  */
-uniform bool u_palette_match_rgb = false;
+uniform bool u_palette_use_match_rgb = false;
 /** Max number of colors to compare in RGB palette matching.
  * Higher values = more accurate color match, but worse performance.
  * 64 is a practical upper limit. Beyond this, performance tanks hard on most GPUs.
@@ -43,9 +54,38 @@ vec3 _get_palette_color(float palette_index, float uv_x, float rows) {
 	return texture(u_palette_color_texture, vec2(uv_x, uv_y)).rgb;
 }
 
+vec3 _sample_palette_lut(vec3 color_index, float palette_row, float size, float rows) {
+	float x = (color_index.r + color_index.b * size + 0.5) / (size * size);
+	float y = (color_index.g + palette_row * size + 0.5) / (size * rows);
+
+	return texture(u_palette_lut_texture, vec2(x, y)).rgb;
+}
+
+vec3 apply_palette_mapping_lut(vec3 color) {
+	ivec2 lut_size = textureSize(u_palette_lut_texture, 0);
+	int size = int(u_palette_lut_size);
+	int rows = lut_size.y / size;
+
+	if (size <= 0 || lut_size.x <= 0 || rows <= 0) {
+		return color;
+	}
+
+	vec3 scaled = clamp(color, 0.0, 1.0) * float(size - 1);
+
+	float current_val = max(0.0, u_palette_loop_step);
+	float current_step = floor(current_val);
+	float t = fract(current_val);
+
+	float palette_a_index = clamp(_get_looped_palette_row(current_step), 0.0, float(rows - 1));
+	float palette_b_index = clamp(_get_looped_palette_row(current_step + 1.0), 0.0, float(rows - 1));
+
+	vec3 col_a = _sample_palette_lut(scaled, palette_a_index, float(size), float(rows));
+	vec3 col_b = _sample_palette_lut(scaled, palette_b_index, float(size), float(rows));
+
+	return mix(col_a, col_b, t);
+}
+
 vec3 apply_palette_mapping_rgb(vec3 color) {
-	// TODO: Add LUT support instead of RGB-flexing
-	
 	ivec2 palette_tex_size = textureSize(u_palette_color_texture, 0);
 	int cols = palette_tex_size.x;
 	int rows = palette_tex_size.y;

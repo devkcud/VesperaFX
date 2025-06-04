@@ -79,8 +79,7 @@ post-FX pipeline.
 
 - ✅ Dithering (multiple modes)
   - 🔄 Runtime-selectable dithering mode (via uniform toggle)
-- ✅ Palette-based color mapping via luminance or brute-force RGB _(LUT support
-  planned)_
+- ✅ Palette-based color mapping via luminance, brute-force RGB, or LUT
 - ✅ Pixelation with custom grid size
 - ✅ Sharpening (multiple kernels)
 - ✅ Color adjustments: hue, saturation, contrast, gamma
@@ -104,7 +103,7 @@ post-FX pipeline.
 ## 🧪 Usage Notes
 
 - RGB palette matching uses brute-force comparison per pixel. This is slow.
-  Consider optimizing or using a LUT (planned feature).
+  Consider using precomputed LUT for better performance.
 - Pixelation + Sharpening may cause artifacts. There's a flag
   (`#define ALLOW_PIXELATION_SHARPEN_COMBO`) to allow it, but it's not
   recommended unless you really want it.

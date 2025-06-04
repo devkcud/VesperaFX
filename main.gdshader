@@ -81,11 +81,15 @@ void fragment() {
 
 	#ifdef ENABLE_PALETTE_MAPPING
 	if (u_palette_shading_enabled) {
-		color = (
-			u_palette_match_rgb
-				? apply_palette_mapping_rgb(color)
-				: apply_palette_mapping_luminance(color)
-		);
+		if (u_palette_shading_enabled) {
+			if (u_palette_use_lut) {
+				color = apply_palette_mapping_lut(color);
+			} else if (u_palette_use_match_rgb) {
+				color = apply_palette_mapping_rgb(color);
+			} else {
+				color = apply_palette_mapping_luminance(color);
+			}
+		}
 	}
 	#endif
 
