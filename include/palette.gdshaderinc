@@ -3,6 +3,7 @@
 #ifndef PALETTE
 #define PALETTE
 
+group_uniforms Palette;
 uniform sampler2D u_palette_color_texture : filter_nearest;
 /** Optional precomputed LUT texture for fast RGB palette lookups.
  * The texture should be laid out as a 3D LUT where the width is
@@ -35,6 +36,7 @@ uniform int u_palette_match_rgb_max_colors = 64;
  * Even steps use base row (0), odd steps cycle through alt rows.
  */
 uniform float u_palette_loop_step = 0.0;
+group_uniforms;
 
 /** Loops through palette rows with a bounce pattern:
  * Even steps: base palette (row 0)

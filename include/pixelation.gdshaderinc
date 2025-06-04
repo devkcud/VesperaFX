@@ -1,6 +1,7 @@
 #ifndef PIXELATION
 #define PIXELATION
 
+group_uniforms Pixelation;
 /** Pixelation removes sub-pixel detail, which reduces or negates the visual effect of sharpening.
  * Since sharpening is applied *after* pixelation, enabling both can waste performance and cause artifacts.
  *
@@ -8,6 +9,7 @@
  */
 uniform bool u_pixelation_enabled = false;
 uniform int u_pixelation_size : hint_range(1, 16) = 2;
+group_uniforms;
 
 vec2 get_pixelated_coord(vec2 pixel_coord, int pixel_chunk_size) {
 	if (pixel_chunk_size <= 1) return pixel_coord;

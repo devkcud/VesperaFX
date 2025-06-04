@@ -3,12 +3,14 @@
 #ifndef RENDERING
 #define RENDERING
 
+group_uniforms Rendering;
 uniform bool u_rendering_gamma_correction_input_enabled = true;
 uniform bool u_rendering_gamma_correction_output_enabled = false;
 uniform float u_rendering_gamma : hint_range(0.0, 5.0) = 1.0;
 uniform float u_rendering_contrast : hint_range(0.0, 2.0) = 1.0;
 uniform float u_rendering_saturation : hint_range(0.0, 2.0) = 1.0;
 uniform float u_rendering_hue_shift : hint_range(0, 6.28) = 0.0;
+group_uniforms;
 
 mat3 _hue_shift_matrix(float angle) {
 	float c = cos(angle);

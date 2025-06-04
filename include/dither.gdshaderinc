@@ -1,11 +1,13 @@
 #ifndef BAYER
 #define BAYER
 
+group_uniforms Dithering;
 /** Only used if u_dither_mode is set to "Blue Noise" */
 uniform sampler2D u_dither_blue_noise_texture : filter_nearest;
 
 uniform int u_dither_mode : hint_enum("Off", "Bayer", "Noise", "Error Diffusion", "Blue Noise") = 1;
 uniform int u_dither_level = 16;
+group_uniforms;
 
 const int BAYER_MATRIX_SIZE = 8;
 const float BAYER_MATRIX[BAYER_MATRIX_SIZE * BAYER_MATRIX_SIZE] = float[](

@@ -3,6 +3,7 @@
 #ifndef SHARPENING
 #define SHARPENING
 
+group_uniforms Sharpening;
 /** Sharpening enhances edge contrast, but may introduce ringing or noise,
  * especially on low-res or pixelated images.
  *
@@ -12,6 +13,7 @@ uniform int u_sharpen_kernel : hint_enum("Off", "Naive", "Unsharp Mask", "Edge A
 
 uniform float u_sharpen_amount : hint_range(0.0, 10.0) = 0.8;
 uniform float u_sharpen_edge_threshold : hint_range(0.0, 1.0, 0.05) = 0.05;
+group_uniforms;
 
 float _sobel_edge_strength(sampler2D tex, vec2 uv, vec2 pixel_size) {
 	float tl = dot(texture(tex, uv + pixel_size * vec2(-1.0, -1.0)).rgb, LUMA);
