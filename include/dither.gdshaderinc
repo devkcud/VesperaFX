@@ -46,10 +46,17 @@ vec3 dither_noise(vec3 color, vec2 pixel_coord, float range_scale, float quantiz
 }
 
 vec3 dither_floyd_steinberg(vec3 color, vec2 pixel_coord, float range_scale, float quantize_scale) {
-	// TODO: Implement correct Faux Floyd-Steinberg dithering
+	vec2 pos = floor(pixel_coord);
+	bool odd_row = bool(int(pos.y) & 1);
 
-	vec2 offset = vec2(mod(pixel_coord.y, 2.0), mod(pixel_coord.x + pixel_coord.y, 2.0));
-	float spread = dot(offset, vec2(0.375, 0.125)) - 0.25;
+	bool right = odd_row ? (int(pos.x) & 1) == 0 : (int(pos.x) & 1) == 1;
+
+	float spread = 0.0;
+	if (!odd_row) {
+		spread = right ? 0.125 : -0.375;
+	} else {
+		spread = right ? -0.125 : 0.375;
+	}
 
 	vec3 adjusted = color + spread * range_scale;
 
