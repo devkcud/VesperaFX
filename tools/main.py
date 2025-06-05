@@ -1,4 +1,4 @@
-from tools.lut import tfloat, LUTGenerator
+from lut import tfloat, LUTGenerator
 
 
 def identity(r: float, g: float, b: float) -> tfloat:
