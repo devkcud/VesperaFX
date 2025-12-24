@@ -13,6 +13,7 @@ uniform sampler2D u_palette_color_texture : filter_nearest;
 uniform sampler2D u_palette_lut_texture : filter_nearest;
 
 uniform bool u_palette_shading_enabled = true;
+uniform float u_palette_invert : hint_range(0.0, 1.0, 0.01) = 0.0;
 
 /** Use LUT mapping when true. */
 uniform bool u_palette_use_lut = false;
@@ -30,7 +31,7 @@ uniform bool u_palette_use_match_rgb = false;
  * 64 is a practical upper limit. Beyond this, performance tanks hard on most GPUs.
  * Tested on low-end (11+ yr old) hardware: 64 was a sweet spot.
  */
-uniform int u_palette_match_rgb_max_colors = 64;
+uniform int u_palette_match_rgb_max_colors = 0;
 
 /** Controls palette animation step.
  * Even steps use base row (0), odd steps cycle through alt rows.
@@ -49,6 +50,22 @@ float _get_looped_palette_row(float step_float) {
 	return (step_index % 2 == 0) ? 0.0 : float((step_index + 1) / 2);
 }
 
+struct PaletteAnimState {
+	float row_a;
+	float row_b;
+	float blend;
+};
+
+PaletteAnimState _get_palette_anim_state(float max_rows) {
+	float val = max(0.0, u_palette_loop_step);
+	float step = floor(val);
+
+	float row_a = clamp(_get_looped_palette_row(step), 0.0, max_rows - 1.0);
+	float row_b = clamp(_get_looped_palette_row(step + 1.0), 0.0, max_rows - 1.0);
+
+	return PaletteAnimState(row_a, row_b, fract(val));
+}
+
 vec3 _get_palette_color(float palette_index, float uv_x, float rows) {
 	palette_index = clamp(palette_index, 0.0, max(0.0, rows - 1.0));
 	float uv_y = (palette_index + 0.5) / rows;
@@ -64,27 +81,32 @@ vec3 _sample_palette_lut(vec3 color_index, float palette_row, float size, float 
 }
 
 vec3 apply_palette_mapping_lut(vec3 color) {
-	ivec2 lut_size = textureSize(u_palette_lut_texture, 0);
-	int size = int(u_palette_lut_size);
-	int rows = lut_size.y / size;
+	ivec2 lut_dim = textureSize(u_palette_lut_texture, 0);
 
-	if (size <= 0 || lut_size.x <= 0 || rows <= 0) {
+	vec2 meta_uv = vec2(0.5 / float(lut_dim.x), 0.5 / float(lut_dim.y));
+	int size = int(texture(u_palette_lut_texture, meta_uv).r * 255.0 + 0.5);
+
+	if (size < 2 || size > 64) {
+		size = u_palette_lut_size;
+	}
+
+	int rows = lut_dim.y / size;
+
+	if (size <= 0 || lut_dim.x <= 0 || rows <= 0) {
 		return color;
 	}
 
-	vec3 scaled = clamp(color, 0.0, 1.0) * float(size - 1);
+	vec3 clamped = clamp(color, 0.0, 1.0);
+	vec3 lut_input = mix(clamped, vec3(1.0) - clamped, u_palette_invert);
 
-	float current_val = max(0.0, u_palette_loop_step);
-	float current_step = floor(current_val);
-	float t = fract(current_val);
+	vec3 scaled = lut_input * float(size - 1);
 
-	float palette_a_index = clamp(_get_looped_palette_row(current_step), 0.0, float(rows - 1));
-	float palette_b_index = clamp(_get_looped_palette_row(current_step + 1.0), 0.0, float(rows - 1));
+	PaletteAnimState anim = _get_palette_anim_state(float(rows));
 
-	vec3 col_a = _sample_palette_lut(scaled, palette_a_index, float(size), float(rows));
-	vec3 col_b = _sample_palette_lut(scaled, palette_b_index, float(size), float(rows));
+	vec3 col_a = _sample_palette_lut(scaled, anim.row_a, float(size), float(rows));
+	vec3 col_b = _sample_palette_lut(scaled, anim.row_b, float(size), float(rows));
 
-	return mix(col_a, col_b, t);
+	return mix(col_a, col_b, anim.blend);
 }
 
 vec3 apply_palette_mapping_rgb(vec3 color) {
@@ -96,31 +118,29 @@ vec3 apply_palette_mapping_rgb(vec3 color) {
 		return color;
 	}
 
-	float current_val = max(0.0, u_palette_loop_step);
-	float current_step = floor(current_val);
-	float t = fract(current_val);
+	vec3 match_color = mix(color, vec3(1.0) - color, u_palette_invert);
 
-	float palette_a_index = _get_looped_palette_row(current_step);
-	float palette_b_index = _get_looped_palette_row(current_step + 1.0);
+	PaletteAnimState anim = _get_palette_anim_state(float(rows));
 
 	vec3 closest_a = vec3(0.0);
 	vec3 closest_b = vec3(0.0);
 	float best_distance_a = FLT_MAX;
 	float best_distance_b = FLT_MAX;
 
-	// Hard cap at colors per palette row to avoid GPU infinite loop risk.
-	int max_colors = min(cols, u_palette_match_rgb_max_colors);
+	int max_colors = (u_palette_match_rgb_max_colors > 0)
+		? min(cols, u_palette_match_rgb_max_colors)
+		: min(cols, 64);
 
 	for (int i = 0; i < max_colors; i++) {
 		float uv_x = (float(i) + 0.5) / float(cols);
 
-		vec3 col_a = _get_palette_color(palette_a_index, uv_x, float(rows));
-		vec3 col_b = _get_palette_color(palette_b_index, uv_x, float(rows));
+		vec3 col_a = _get_palette_color(anim.row_a, uv_x, float(rows));
+		vec3 col_b = _get_palette_color(anim.row_b, uv_x, float(rows));
 
-		vec3 diff_a = color - col_a;
+		vec3 diff_a = match_color - col_a;
 		float d_a = dot(diff_a, diff_a);
 
-		vec3 diff_b = color - col_b;
+		vec3 diff_b = match_color - col_b;
 		float d_b = dot(diff_b, diff_b);
 
 		if (d_a < best_distance_a) {
@@ -133,7 +153,7 @@ vec3 apply_palette_mapping_rgb(vec3 color) {
 		}
 	}
 
-	return mix(closest_a, closest_b, t);
+	return mix(closest_a, closest_b, anim.blend);
 }
 
 vec3 apply_palette_mapping_luminance(vec3 color) {
@@ -149,19 +169,14 @@ vec3 apply_palette_mapping_luminance(vec3 color) {
 
 	float col_idx = clamp(floor(color_luminance * cols), 0.0, max(0.0, cols - 1.0));
 	float uv_x = (col_idx + 0.5) / cols;
+	uv_x = mix(uv_x, 1.0 - uv_x, u_palette_invert);
 
-	float current_val = max(0.0, u_palette_loop_step);
+	PaletteAnimState anim = _get_palette_anim_state(rows);
 
-	float current_step = floor(current_val);
-	float t = fract(current_val);
+	vec3 color_a = _get_palette_color(anim.row_a, uv_x, rows);
+	vec3 color_b = _get_palette_color(anim.row_b, uv_x, rows);
 
-	float palette_a_index = _get_looped_palette_row(current_step);
-	float palette_b_index = _get_looped_palette_row(current_step + 1.0);
-
-	vec3 color_a = _get_palette_color(palette_a_index, uv_x, rows);
-	vec3 color_b = _get_palette_color(palette_b_index, uv_x, rows);
-
-	return mix(color_a, color_b, t);
+	return mix(color_a, color_b, anim.blend);
 }
 
 #endif
