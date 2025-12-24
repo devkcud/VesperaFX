@@ -81,20 +81,18 @@ void fragment() {
 
 	#ifdef ENABLE_PALETTE_MAPPING
 	if (u_palette_shading_enabled) {
-		if (u_palette_shading_enabled) {
-			if (u_palette_use_lut) {
-				color = apply_palette_mapping_lut(color);
-			} else if (u_palette_use_match_rgb) {
-				color = apply_palette_mapping_rgb(color);
-			} else {
-				color = apply_palette_mapping_luminance(color);
-			}
+		if (u_palette_use_lut) {
+			color = apply_palette_mapping_lut(color);
+		} else if (u_palette_use_match_rgb) {
+			color = apply_palette_mapping_rgb(color);
+		} else {
+			color = apply_palette_mapping_luminance(color);
 		}
 	}
 	#endif
 
 	#if defined(REVERSE_DITHER_PALETTE_MAPPING) && defined(ENABLE_DITHERING)
-	color = apply_dithering(color, pixel_coord, u_dither_blue_noise_texture);
+	color = apply_dithering_by_mode(color, pixel_coord, u_dither_blue_noise_texture);
 	#endif
 
 	#ifdef ENABLE_COLOR_ADJUST
