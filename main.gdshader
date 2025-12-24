@@ -6,6 +6,7 @@ render_mode unshaded;
 #define ENABLE_PIXELATION
 #define ENABLE_SHARPENING
 #define ENABLE_COLOR_ADJUST
+#define ENABLE_PS1
 
 /** Allows both pixelation and sharpening to be applied simultaneously.
  * This is discouraged, as it often produces visual artifacts.
@@ -37,6 +38,10 @@ uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_d
 #include "include/rendering.gdshaderinc"
 #endif
 
+#ifdef ENABLE_PS1
+#include "include/ps1.gdshaderinc"
+#endif
+
 #ifdef ENABLE_SHARPENING
 bool _should_sharpen() {
 	#if defined(ENABLE_PIXELATION) && !defined(ALLOW_PIXELATION_SHARPEN_COMBO)
@@ -55,6 +60,12 @@ void fragment() {
 	if (u_pixelation_enabled) {
 		pixel_coord = get_pixelated_coord(FRAGCOORD.xy, u_pixelation_size);
 		uv = to_pixelated_uv(SCREEN_PIXEL_SIZE, SCREEN_UV, u_pixelation_size);
+	}
+	#endif
+
+	#ifdef ENABLE_PS1
+	if (u_ps1_jitter_enabled) {
+		uv = ps1_jitter_uv(uv, SCREEN_PIXEL_SIZE, TIME);
 	}
 	#endif
 

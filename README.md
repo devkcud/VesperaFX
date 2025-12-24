@@ -120,6 +120,7 @@ post-FX pipeline.
 | `pixelation.gdshaderinc` | Pixel grid reduction               |
 | `sharpening.gdshaderinc` | Sharpen filters (multiple kernels) |
 | `rendering.gdshaderinc`  | Hue/saturation/contrast/gamma      |
+| `ps1.gdshaderinc`        | PS1-style texture jitter           |
 | `utils.gdshaderinc`      | Shared utility functions           |
 
 > You can yank one or all. Everything is compartmentalized.
