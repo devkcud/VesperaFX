@@ -7,6 +7,8 @@ render_mode unshaded;
 #define ENABLE_SHARPENING
 #define ENABLE_COLOR_ADJUST
 #define ENABLE_PS1
+#define ENABLE_CRT
+#define ENABLE_VHS
 
 /** Allows both pixelation and sharpening to be applied simultaneously.
  * This is discouraged, as it often produces visual artifacts.
@@ -47,6 +49,10 @@ uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_d
 #include "include/ps1.gdshaderinc"
 #endif
 
+#if defined(ENABLE_CRT) || defined(ENABLE_VHS)
+#include "include/crt.gdshaderinc"
+#endif
+
 #ifdef ENABLE_SHARPENING
 bool _should_sharpen() {
 	#if defined(ENABLE_PIXELATION) && !defined(ALLOW_PIXELATION_SHARPEN_COMBO)
@@ -74,7 +80,15 @@ void fragment() {
 	}
 	#endif
 
+	#ifdef ENABLE_CRT
+	uv = apply_crt_warp(uv);
+	#endif
+
+	#ifdef ENABLE_VHS
+	vec3 color = apply_vhs_chromatic(screen_texture, uv);
+	#else
 	vec3 color = texture(screen_texture, uv).rgb;
+	#endif
 
 	#ifdef ENABLE_COLOR_ADJUST
 	if (u_rendering_gamma_correction_input_enabled) {
@@ -134,6 +148,26 @@ void fragment() {
 	if (u_rendering_gamma_correction_output_enabled) {
 		color = gamma_correction_output(color, u_rendering_gamma);
 	}
+	#endif
+
+	#ifdef ENABLE_CRT
+	float pixel_scale = 1.0;
+	#ifdef ENABLE_PIXELATION
+	pixel_scale = u_pixelation_enabled ? float(u_pixelation_size) * SCREEN_PIXEL_SIZE.y : SCREEN_PIXEL_SIZE.y;
+	#else
+	pixel_scale = SCREEN_PIXEL_SIZE.y;
+	#endif
+	color = apply_crt_scanlines(color, SCREEN_UV, pixel_scale);
+	#endif
+
+	#ifdef ENABLE_VHS
+	color = apply_vhs_tracking(color, SCREEN_UV, TIME);
+	color = apply_vhs_noise(color, SCREEN_UV, TIME);
+	#endif
+
+	#ifdef ENABLE_CRT
+	color = apply_crt_vignette(color, SCREEN_UV);
+	color = apply_crt_black_bars(color, SCREEN_UV);
 	#endif
 
 	COLOR = vec4(color, 1.0);
