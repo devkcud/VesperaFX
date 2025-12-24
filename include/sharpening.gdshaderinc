@@ -9,10 +9,11 @@ group_uniforms Sharpening;
  *
  * Recommended: Use sharpening only on high-res, unpixelated input.
  */
-uniform int u_sharpen_kernel : hint_enum("Off", "Naive", "Unsharp Mask", "Edge Aware", "High Boost") = 0;
+uniform int u_sharpen_kernel : hint_enum("Off", "Laplacian", "Unsharp Mask", "Bilateral", "High Boost") = 0;
 
 uniform float u_sharpen_amount : hint_range(0.0, 10.0) = 0.8;
 uniform float u_sharpen_edge_threshold : hint_range(0.0, 1.0, 0.05) = 0.05;
+uniform float u_sharpen_boost_factor : hint_range(1.0, 5.0) = 1.5;
 group_uniforms;
 
 float _sobel_edge_strength(sampler2D tex, vec2 uv, vec2 pixel_size) {
@@ -33,82 +34,81 @@ float _sobel_edge_strength(sampler2D tex, vec2 uv, vec2 pixel_size) {
 	return length(vec2(gx, gy));
 }
 
-vec3 _box_blur(sampler2D tex, vec2 uv, vec2 pixel_size) {
-	vec3 sum = vec3(0.0);
+vec3 _gaussian_blur_3x3(sampler2D tex, vec2 uv, vec2 ps) {
+	return texture(tex, uv + ps * vec2(-1, -1)).rgb * 0.0625
+		 + texture(tex, uv + ps * vec2( 0, -1)).rgb * 0.125
+		 + texture(tex, uv + ps * vec2( 1, -1)).rgb * 0.0625
+		 + texture(tex, uv + ps * vec2(-1,  0)).rgb * 0.125
+		 + texture(tex, uv + ps * vec2( 0,  0)).rgb * 0.25
+		 + texture(tex, uv + ps * vec2( 1,  0)).rgb * 0.125
+		 + texture(tex, uv + ps * vec2(-1,  1)).rgb * 0.0625
+		 + texture(tex, uv + ps * vec2( 0,  1)).rgb * 0.125
+		 + texture(tex, uv + ps * vec2( 1,  1)).rgb * 0.0625;
+}
 
-	for (int y = -1; y <= 1; ++y) {
-		for (int x = -1; x <= 1; ++x) {
-			sum += texture(tex, uv + pixel_size * vec2(float(x), float(y))).rgb;
+vec3 apply_sharpen_unsharp_mask(sampler2D tex, vec2 uv, vec2 ps) {
+	vec3 orig = texture(tex, uv).rgb;
+	vec3 blur = _gaussian_blur_3x3(tex, uv, ps);
+
+	return clamp(orig + u_sharpen_amount * (orig - blur), 0.0, 1.0);
+}
+
+vec3 apply_sharpen_bilateral(sampler2D tex, vec2 uv, vec2 ps) {
+	vec3 center = texture(tex, uv).rgb;
+	float center_luma = dot(center, LUMA);
+
+	vec3 blur_sum = vec3(0.0);
+	float weight_sum = 0.0;
+
+	float sigma_sq = 2.0 * u_sharpen_edge_threshold * u_sharpen_edge_threshold;
+
+	for (int y = -1; y <= 1; y++) {
+		for (int x = -1; x <= 1; x++) {
+			vec3 sample_col = texture(tex, uv + ps * vec2(float(x), float(y))).rgb;
+			float sample_luma = dot(sample_col, LUMA);
+			float luma_diff = center_luma - sample_luma;
+			float weight = exp(-luma_diff * luma_diff / sigma_sq);
+
+			blur_sum += sample_col * weight;
+			weight_sum += weight;
 		}
 	}
 
-	return sum / 9.0;
+	vec3 bilateral_blur = blur_sum / weight_sum;
+	return clamp(center + u_sharpen_amount * (center - bilateral_blur), 0.0, 1.0);
 }
 
-vec3 apply_sharpen_unsharp_mask(sampler2D tex, vec2 uv, vec2 pixel_size) {
+vec3 apply_sharpen_high_boost(sampler2D tex, vec2 uv, vec2 ps) {
 	vec3 orig = texture(tex, uv).rgb;
-	vec3 blur = _box_blur(tex, uv, pixel_size);
-
-	vec3 sharpened = orig + u_sharpen_amount * (orig - blur);
-
-	return clamp(sharpened, 0.0, 1.0);
-}
-
-vec3 apply_sharpen_edge_aware(sampler2D tex, vec2 uv, vec2 pixel_size) {
-	float edge_strength = _sobel_edge_strength(tex, uv, pixel_size);
-	if (edge_strength < u_sharpen_edge_threshold) return texture(tex, uv).rgb;
-
-	return apply_sharpen_unsharp_mask(tex, uv, pixel_size);
-}
-
-vec3 apply_sharpen_high_boost(sampler2D tex, vec2 uv, vec2 pixel_size) {
-	vec3 orig = texture(tex, uv).rgb;
-	vec3 blur = _box_blur(tex, uv, pixel_size);
-
+	vec3 blur = _gaussian_blur_3x3(tex, uv, ps);
 	vec3 mask = orig - blur;
-	vec3 result = orig + u_sharpen_amount * mask;
 
-	return clamp(result, 0.0, 1.0);
+	return clamp(u_sharpen_boost_factor * orig - blur + u_sharpen_amount * mask, 0.0, 1.0);
 }
 
-vec3 apply_sharpen_naive(sampler2D tex, vec2 uv, vec2 pixel_size) {
-	vec3 center = texture(tex, uv).rgb;
+vec3 apply_sharpen_laplacian(sampler2D tex, vec2 uv, vec2 ps) {
+	vec3 c = texture(tex, uv).rgb;
 
-	vec3 lap = vec3(0.0);
-	lap += texture(tex, uv + pixel_size * vec2(-1, -1)).rgb * -1.0;
-	lap += texture(tex, uv + pixel_size * vec2( 0, -1)).rgb * -1.0;
-	lap += texture(tex, uv + pixel_size * vec2( 1, -1)).rgb * -1.0;
+	vec3 neighbors = texture(tex, uv + ps * vec2( 0, -1)).rgb
+				   + texture(tex, uv + ps * vec2(-1,  0)).rgb
+				   + texture(tex, uv + ps * vec2( 1,  0)).rgb
+				   + texture(tex, uv + ps * vec2( 0,  1)).rgb;
 
-	lap += texture(tex, uv + pixel_size * vec2(-1,  0)).rgb * -1.0;
-	lap += center * 9.0;
-	lap += texture(tex, uv + pixel_size * vec2( 1,  0)).rgb * -1.0;
+	vec3 lap = c - neighbors * 0.25;
 
-	lap += texture(tex, uv + pixel_size * vec2(-1,  1)).rgb * -1.0;
-	lap += texture(tex, uv + pixel_size * vec2( 0,  1)).rgb * -1.0;
-	lap += texture(tex, uv + pixel_size * vec2( 1,  1)).rgb * -1.0;
-
-	vec3 mask = lap - center;
-	vec3 sharpened = center + (u_sharpen_amount * mask) / 9.0;
-
-	vec3 diff = abs(sharpened - center);
-	float edge_strength = max(max(diff.r, diff.g), diff.b);
-	if (edge_strength < u_sharpen_edge_threshold) {
-		return center;
-	}
-
-	return clamp(sharpened, 0.0, 1.0);
+	return clamp(c + u_sharpen_amount * lap, 0.0, 1.0);
 }
 
-vec3 apply_sharpen_by_kernel(sampler2D tex, vec2 uv, vec2 pixel_size) {
+vec3 apply_sharpen_by_kernel(sampler2D tex, vec2 uv, vec2 ps) {
 	switch (u_sharpen_kernel) {
 		case 1:
-			return apply_sharpen_naive(tex, uv, pixel_size);
+			return apply_sharpen_laplacian(tex, uv, ps);
 		case 2:
-			return apply_sharpen_unsharp_mask(tex, uv, pixel_size);
+			return apply_sharpen_unsharp_mask(tex, uv, ps);
 		case 3:
-			return apply_sharpen_edge_aware(tex, uv, pixel_size);
+			return apply_sharpen_bilateral(tex, uv, ps);
 		case 4:
-			return apply_sharpen_high_boost(tex, uv, pixel_size);
+			return apply_sharpen_high_boost(tex, uv, ps);
 		default:
 			return texture(tex, uv).rgb;
 	}
