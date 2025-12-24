@@ -17,6 +17,7 @@ uniform float u_palette_invert : hint_range(0.0, 1.0, 0.01) = 0.0;
 
 /** Use LUT mapping when true. */
 uniform bool u_palette_use_lut = false;
+uniform float u_palette_lut_blend : hint_range(0.0, 1.0, 0.01) = 1.0;
 
 /** Enables brute-force RGB color matching against the palette.
  * This is significantly slower than luminance-based mapping, particularly with large palettes.

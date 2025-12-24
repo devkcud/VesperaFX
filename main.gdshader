@@ -16,6 +16,11 @@ render_mode unshaded;
 /** Change from "Dithering -> Palette Mapping" to "Palette Mapping -> Dithering" */
 //#define REVERSE_DITHER_PALETTE_MAPPING
 
+/** Allows blending between color texture and LUT palette mapping.
+ * Computes both mappings simultaneously - may impact performance on low-end GPUs.
+ */
+#define ALLOW_PALETTE_LUT_BLEND
+
 uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_disable;
 
 #ifdef ENABLE_DITHERING
@@ -92,6 +97,18 @@ void fragment() {
 
 	#ifdef ENABLE_PALETTE_MAPPING
 	if (u_palette_shading_enabled) {
+		#ifdef ALLOW_PALETTE_LUT_BLEND
+		vec3 tex_color = u_palette_use_match_rgb
+			? apply_palette_mapping_rgb(color)
+			: apply_palette_mapping_luminance(color);
+
+		if (u_palette_use_lut) {
+			vec3 lut_color = apply_palette_mapping_lut(color);
+			color = mix(tex_color, lut_color, u_palette_lut_blend);
+		} else {
+			color = tex_color;
+		}
+		#else
 		if (u_palette_use_lut) {
 			color = apply_palette_mapping_lut(color);
 		} else if (u_palette_use_match_rgb) {
@@ -99,6 +116,7 @@ void fragment() {
 		} else {
 			color = apply_palette_mapping_luminance(color);
 		}
+		#endif
 	}
 	#endif
 
