@@ -17,8 +17,6 @@ uniform float u_palette_invert : hint_range(0.0, 1.0, 0.01) = 0.0;
 
 /** Use LUT mapping when true. */
 uniform bool u_palette_use_lut = false;
-/** Dimension size for the LUT texture layout. */
-uniform int u_palette_lut_size = 16;
 
 /** Enables brute-force RGB color matching against the palette.
  * This is significantly slower than luminance-based mapping, particularly with large palettes.
@@ -82,17 +80,10 @@ vec3 _sample_palette_lut(vec3 color_index, float palette_row, float size, float 
 
 vec3 apply_palette_mapping_lut(vec3 color) {
 	ivec2 lut_dim = textureSize(u_palette_lut_texture, 0);
-
-	vec2 meta_uv = vec2(0.5 / float(lut_dim.x), 0.5 / float(lut_dim.y));
-	int size = int(texture(u_palette_lut_texture, meta_uv).r * 255.0 + 0.5);
-
-	if (size < 2 || size > 64) {
-		size = u_palette_lut_size;
-	}
-
+	int size = int(sqrt(float(lut_dim.x)));
 	int rows = lut_dim.y / size;
 
-	if (size <= 0 || lut_dim.x <= 0 || rows <= 0) {
+	if (size < 2 || lut_dim.x <= 0 || rows <= 0) {
 		return color;
 	}
 
