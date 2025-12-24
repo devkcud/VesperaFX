@@ -1,11 +1,10 @@
-#ifndef BAYER
-#define BAYER
+#ifndef DITHER
+#define DITHER
 
 group_uniforms Dithering;
-/** Only used if u_dither_mode is set to "Blue Noise" */
 uniform sampler2D u_dither_blue_noise_texture : filter_nearest;
 
-uniform int u_dither_mode : hint_enum("Off", "Bayer", "Noise", "Error Diffusion", "Blue Noise") = 1;
+uniform int u_dither_mode : hint_enum("Off", "Bayer", "Noise", "Pseudo F-S", "Blue Noise") = 1;
 uniform int u_dither_level = 16;
 group_uniforms;
 
@@ -84,7 +83,7 @@ vec3 apply_dithering_by_mode(vec3 color, vec2 pixel_coord, sampler2D blue_noise_
 
 	float range_scale = 1.0 / float(u_dither_level - 1);
 	float quantize_scale = float(u_dither_level - 1);
-	vec3 dithered = color; // Defaults to color input
+	vec3 dithered = color;
 
 	switch (u_dither_mode) {
 		case 1: // Bayer
@@ -93,7 +92,7 @@ vec3 apply_dithering_by_mode(vec3 color, vec2 pixel_coord, sampler2D blue_noise_
 		case 2: // Noise
 			dithered = dither_noise(color, pixel_coord, range_scale, quantize_scale);
 			break;
-		case 3: // Faux Floyd-Steinberg
+		case 3: // Pseudo Floyd-Steinberg
 			dithered = dither_floyd_steinberg(color, pixel_coord, range_scale, quantize_scale);
 			break;
 		case 4: // Blue Noise
