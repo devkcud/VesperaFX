@@ -11,7 +11,7 @@ Designed for retro visuals, game feel tweaking, and full control over your
 post-FX pipeline.
 
 <p align="center">
-    <img src="demo/demo.gif" alt="Shader Demo">
+	<img src="demo/demo.gif" alt="Shader Demo">
 </p>
 
 > This demo gif is low-res for size reasons. The actual shader looks crisp and
@@ -23,55 +23,55 @@ post-FX pipeline.
 ## Unshaded
 
 <p align="center">
-    <img src="demo/examples/unshaded-default-scene.png" alt="Shader Demo">
+	<img src="demo/examples/unshaded-default-scene.png" alt="Shader Demo">
 </p>
 
 ## 2 Palette Black-White
 
 <p align="center">
-    <img src="demo/examples/2-palette-bw.png" alt="Shader Demo">
+	<img src="demo/examples/2-palette-bw.png" alt="Shader Demo">
 </p>
 
 ## 2 Palette Black-White + Sharpening
 
 <p align="center">
-    <img src="demo/examples/2-palette-bw-sharpen.png" alt="Shader Demo">
+	<img src="demo/examples/2-palette-bw-sharpen.png" alt="Shader Demo">
 </p>
 
 ## 2 Palette True Black-White with Level 4 Dithering
 
 <p align="center">
-    <img src="demo/examples/2-palette-truebw-4-dithering.png" alt="Shader Demo">
+	<img src="demo/examples/2-palette-truebw-4-dithering.png" alt="Shader Demo">
 </p>
 
 ## 2 Palette True Black-White with Level 4 Error Diff Dithering with Color Correction (Hue Shift)
 
 <p align="center">
-    <img src="demo/examples/2-palette-truebw-error-diff-dithering.png" alt="Shader Demo">
+	<img src="demo/examples/2-palette-truebw-error-diff-dithering.png" alt="Shader Demo">
 </p>
 
 ## 5 Palette with Default Params
 
 <p align="center">
-    <img src="demo/examples/default-5-palette.png" alt="Shader Demo">
+	<img src="demo/examples/default-5-palette.png" alt="Shader Demo">
 </p>
 
 ## 5 Palette Level 2 Dithering with Color Correction + Pixelation
 
 <p align="center">
-    <img src="demo/examples/5-palette-2-dithering-color-correction-pixelation.png" alt="Shader Demo">
+	<img src="demo/examples/5-palette-2-dithering-color-correction-pixelation.png" alt="Shader Demo">
 </p>
 
 ## 5 Palette Level 2 Dithering, RGB Matching and Color Correction + Pixelation
 
 <p align="center">
-    <img src="demo/examples/5-palette-2-dithering-rgb-matching-color-correction-pixelation.png" alt="Shader Demo">
+	<img src="demo/examples/5-palette-2-dithering-rgb-matching-color-correction-pixelation.png" alt="Shader Demo">
 </p>
 
 ## 5 Palette Level 2 Error Diff Dithering with Color Correction
 
 <p align="center">
-    <img src="demo/examples/5-palette-error-diff-dithering-color-correction.png" alt="Shader Demo">
+	<img src="demo/examples/5-palette-error-diff-dithering-color-correction.png" alt="Shader Demo">
 </p>
 </details>
 
@@ -133,5 +133,5 @@ Author: André Albanese Junior (@patomcio / @devkcud)
 
 ## 🧯 Support
 
-This isn't a framework, it is a toolbox. If you want help with porting it to
-Unity or making a feature for it, let me know.
+This isn't a framework, it is a toolbox. If you need help integrating or
+customizing, feel free to reach out via GitHub issues or social media.
