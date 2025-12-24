@@ -14,8 +14,8 @@ post-FX pipeline.
 	<img src="demo/demo.gif" alt="Shader Demo">
 </p>
 
-> This demo gif is low-res for size reasons. The actual shader looks crisp and
-> clean in-game.
+> Btw, this GIF is actually an older version of the shader. The current one has
+> way more features!
 
 <details>
 <summary><h3>Examples of shading</h3></summary>
