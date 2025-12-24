@@ -3,7 +3,7 @@
 
 group_uniforms PS1_Jitter;
 uniform bool u_ps1_jitter_enabled = false;
-uniform float u_ps1_jitter_intensity : hint_range(0.0, 10.0, 0.1) = 0.5;
+uniform float u_ps1_jitter_intensity : hint_range(0.6, 10.0, 0.1) = 0.6;
 uniform float u_ps1_jitter_speed : hint_range(0.0, 60.0, 1.0) = 4.0;
 uniform int u_ps1_resolution : hint_range(1, 512) = 40;
 group_uniforms;
