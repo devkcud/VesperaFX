@@ -82,24 +82,78 @@ post-FX pipeline.
 
 ## 🎨 Features
 
-- ✅ Dithering (multiple modes: Bayer, Noise, Floyd-Steinberg, Blue Noise)
-  - 🔄 Runtime-selectable dithering mode (via uniform toggle)
-- ✅ Palette-based color mapping via luminance, brute-force RGB, or LUT
-  - 🔄 Optional LUT/texture blend for smooth transitions
-- ✅ Pixelation with custom grid size
-- ✅ Sharpening (multiple kernels: Laplacian, Unsharp Mask, Bilateral, High Boost)
-- ✅ Color adjustments: hue, saturation, contrast, gamma
-- ✅ PS1-style vertex jitter effects
-- ✅ CRT effects
-  - Vignette (edge darkening)
-  - Scanlines (resolution-aware)
-  - Barrel/Pincushion warp (separate X/Y control)
-  - Black bars (letterbox/pillarbox)
-- ✅ VHS effects
-  - Chromatic aberration (RGB offset)
-  - Tracking lines (animated distortion bands)
-  - Noise/grain (animated static)
-- 🧱 Modular `.gdshaderinc` files. Use only what you need.
+Quite a few! Here's what you get:
+
+- [x] Runtime editing via shader uniforms
+- [x] Dithering
+  - [x] Multiple modes:
+    - [x] Bayer
+    - [x] Noise
+    - [x] Pseudo Floyd-Steinberg
+    - [x] Blue Noise
+    - [ ] Real Floyd-Steinberg
+- [x] Palette-based color mapping via luminance, brute-force RGB, or LUT
+  - [x] LUT/texture blend for smooth transitions
+  - [x] Transitions between palette lines
+  - [ ] Precomputed LUT support
+- [x] Pixelation with custom grid size
+- [x] Sharpening
+  - [x] Configurable intensity
+  - [x] Multiple kernel support
+    - [x] Laplacian
+    - [x] Unsharp Mask
+    - [x] Bilateral
+    - [x] High Boost
+    - [ ] Edge Detection
+- [ ] Cartoon/Toon shading
+- [ ] Cartoon/Toon effects
+  - [ ] Wobble
+  - [ ] Swirl
+  - [ ] Stretch
+  - [ ] Outline
+- [ ] Drug effects
+  - [ ] Trails
+  - [ ] Chromatic aberration
+  - [ ] Psychedelic Warp
+- [x] Color adjustments: hue, saturation, contrast, gamma
+- [x] PS1-style vertex jitter effects
+- [x] CRT effects
+  - [x] Vignette (edge darkening)
+  - [x] Scanlines (resolution-aware)
+  - [x] Barrel/Pincushion warp (separate X/Y control)
+  - [x] Black bars (letterbox/pillarbox)
+- [x] VHS effects
+  - [x] Chromatic aberration (RGB offset)
+  - [x] Tracking lines (animated distortion bands)
+  - [x] Noise/grain (animated static)
+- [x] Modular `.gdshaderinc` files. Use only what you need.
+- [x] Well-documented and commented code for easy customization.
+- [x] Configurable effect order (dithering <-> palette mapping)
+- [x] Performance considerations (LUT blending, pixelation-sharpen combo)
+- [x] Utility functions for shared logic
+- [ ] Spatial shader version
+  - [ ] 3D dithering
+  - [ ] Palette mapping for 3D scenes (LUT and RGB)
+  - [ ] CRT/VHS effects for 3D scenes
+  - [ ] Pixelation and sharpening for 3D scenes
+  - [ ] Depth-aware effects
+    - [ ] Near/Far distortion
+    - [ ] Foggy dithering based on distance
+    - [ ] Color loss and overexposure based on distance
+- [ ] Reflective surfaces support
+  - [ ] Dithering on reflections
+  - [ ] Palette mapping on reflections
+  - [ ] Pixelation and sharpening on reflections
+- [ ] Render class for easy integration
+  - [ ] One-click setup
+  - [ ] Preset management
+  - [ ] Profile saving/loading
+  - [ ] GUI for runtime tweaking
+  - [ ] Controller support for adjustments on the fly
+  - [ ] Animation support for dynamic effects
+- [ ] Demo scenes showcasing various effects and combinations
+- [ ] Precomputed LUT generation tool
+- [ ] RGB palette generation tool
 
 ## 📦 Implementation
 
