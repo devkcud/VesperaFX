@@ -1,12 +1,12 @@
 # ✨ VesperaFX - Modular Post-Processing Shader Suite
 
 _Includes: Dithering, palette mapping, pixelation, sharpening, color
-correction, CRT effects, and VHS effects._\
+correction, CRT effects, VHS effects, psychedelic warp, and trails._\
 _Modular. Yankable. Yours to break._
 
 **VesperaFX** is a modular, stylized post-processing shader for **Godot 4.4.1**,
 featuring dithering, palette-based color mapping, pixelation, sharpening,
-CRT/VHS effects, and flexible color adjustments.\
+CRT/VHS effects, psychedelic warp, trails, and flexible color adjustments.\
 Designed for retro visuals, game feel tweaking, and full control over your
 post-FX pipeline.
 
@@ -111,10 +111,10 @@ Quite a few! Here's what you get:
   - [ ] Swirl
   - [ ] Stretch
   - [ ] Outline
-- [ ] Drug effects
-  - [ ] Trails
-  - [ ] Chromatic aberration
-  - [ ] Psychedelic Warp
+- [x] Drug effects
+  - [x] Trails
+  - [x] Chromatic aberration (via VHS)
+  - [x] Psychedelic Warp
 - [x] Color adjustments: hue, saturation, contrast, gamma
 - [x] PS1-style vertex jitter effects
 - [x] CRT effects
@@ -195,6 +195,8 @@ Quite a few! Here's what you get:
 | `ps1.gdshaderinc`        | PS1-style texture jitter                 |
 | `crt.gdshaderinc`        | CRT effects (vignette, scanlines, warp)  |
 | `crt.gdshaderinc`        | VHS effects (chromatic, tracking, noise) |
+| `warp.gdshaderinc`       | Psychedelic sinusoidal UV warp           |
+| `trails.gdshaderinc`     | Rotating radial trail accumulation       |
 | `utils.gdshaderinc`      | Shared utility functions                 |
 
 > You can yank one or all. Everything is compartmentalized.
