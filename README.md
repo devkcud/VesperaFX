@@ -130,7 +130,7 @@ Quite a few! Here's what you get:
   - [ ] Pixelation and sharpening for 3D scenes
 - [ ] Demo scenes showcasing various effects and combinations
 - [x] LUT generation tool
-- [ ] RGB palette generation tool
+- [x] RGB palette generation tool
 
 ## 📦 Implementation
 
