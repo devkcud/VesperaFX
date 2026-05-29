@@ -112,7 +112,7 @@ Quite a few! Here's what you get:
   - [x] Chromatic aberration (via VHS)
   - [x] Psychedelic Warp
 - [x] Color adjustments: hue, saturation, contrast, gamma
-- [x] PS1-style vertex jitter effects
+- [x] PS1-style vertex jitter effects (not really, tho)
 - [x] CRT effects
   - [x] Vignette (edge darkening)
   - [x] Scanlines (resolution-aware)
@@ -122,18 +122,14 @@ Quite a few! Here's what you get:
   - [x] Chromatic aberration (RGB offset)
   - [x] Tracking lines (animated distortion bands)
   - [x] Noise/grain (animated static)
-- [x] Modular `.gdshaderinc` files. Use only what you need.
-- [x] Well-documented and commented code for easy customization.
-- [x] Configurable effect order (dithering <-> palette mapping)
 - [x] Performance considerations (LUT blending, pixelation-sharpen combo)
-- [x] Utility functions for shared logic
 - [ ] Spatial shader version
   - [ ] 3D dithering
   - [ ] Palette mapping for 3D scenes (LUT and RGB)
   - [ ] CRT/VHS effects for 3D scenes
   - [ ] Pixelation and sharpening for 3D scenes
 - [ ] Demo scenes showcasing various effects and combinations
-- [ ] Precomputed LUT generation tool
+- [x] LUT generation tool
 - [ ] RGB palette generation tool
 
 ## 📦 Implementation
