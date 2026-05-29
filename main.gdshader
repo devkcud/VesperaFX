@@ -9,6 +9,8 @@ render_mode unshaded;
 #define ENABLE_PS1
 #define ENABLE_CRT
 #define ENABLE_VHS
+#define ENABLE_WARP
+#define ENABLE_TRAILS
 
 /** Allows both pixelation and sharpening to be applied simultaneously.
  * This is discouraged, as it often produces visual artifacts.
@@ -53,6 +55,14 @@ uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_d
 #include "include/crt.gdshaderinc"
 #endif
 
+#ifdef ENABLE_WARP
+#include "include/warp.gdshaderinc"
+#endif
+
+#ifdef ENABLE_TRAILS
+#include "include/trails.gdshaderinc"
+#endif
+
 #ifdef ENABLE_SHARPENING
 bool _should_sharpen() {
 	#if defined(ENABLE_PIXELATION) && !defined(ALLOW_PIXELATION_SHARPEN_COMBO)
@@ -65,12 +75,19 @@ bool _should_sharpen() {
 
 void fragment() {
 	vec2 uv = SCREEN_UV;
+
+	#ifdef ENABLE_WARP
+	if (u_warp_enabled) {
+		uv = apply_warp(uv, TIME);
+	}
+	#endif
+
 	vec2 pixel_coord = FRAGCOORD.xy;
 
 	#ifdef ENABLE_PIXELATION
 	if (u_pixelation_enabled) {
 		pixel_coord = get_pixelated_coord(FRAGCOORD.xy, u_pixelation_size);
-		uv = to_pixelated_uv(SCREEN_PIXEL_SIZE, SCREEN_UV, u_pixelation_size);
+		uv = to_pixelated_uv(SCREEN_PIXEL_SIZE, uv, u_pixelation_size);
 	}
 	#endif
 
@@ -88,6 +105,12 @@ void fragment() {
 	vec3 color = apply_vhs_chromatic(screen_texture, uv);
 	#else
 	vec3 color = texture(screen_texture, uv).rgb;
+	#endif
+
+	#ifdef ENABLE_TRAILS
+	if (u_trails_enabled) {
+		color = apply_trails(screen_texture, color, uv, TIME);
+	}
 	#endif
 
 	#ifdef ENABLE_COLOR_ADJUST
