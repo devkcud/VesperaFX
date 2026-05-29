@@ -1,4 +1,0 @@
-This shader includes code by André Albanese Junior  
-(@patomcio or @devkcud).  
-Licensed under the Mozilla Public License 2.0 (MPL 2.0).  
-Attribution appreciated in documentation or credits, but not required.

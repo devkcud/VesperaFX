@@ -1,45 +1,24 @@
 shader_type canvas_item;
 render_mode unshaded;
 
-// Lean starter shader. For heavier combinations, see examples/*.gdshader.
+// Cheap retro base: screen sample -> optional dither -> optional palette mapping.
 #define ENABLE_DITHERING
 #define ENABLE_PALETTE_MAPPING
-#define ENABLE_PIXELATION
 
 uniform sampler2D screen_texture : hint_screen_texture, filter_nearest, repeat_disable;
 
-#ifdef ENABLE_DITHERING
-#include "include/dither.gdshaderinc"
-#endif
-
-#ifdef ENABLE_PALETTE_MAPPING
-#include "include/palette.gdshaderinc"
-#endif
-
-#ifdef ENABLE_PIXELATION
-#include "include/pixelation.gdshaderinc"
-#endif
+#include "../include/dither.gdshaderinc"
+#include "../include/palette.gdshaderinc"
 
 void fragment() {
 	vec2 uv = SCREEN_UV;
 	vec2 pixel_coord = FRAGCOORD.xy;
-
-	#ifdef ENABLE_PIXELATION
-	if (u_pixelation_enabled) {
-		pixel_coord = get_pixelated_coord(FRAGCOORD.xy, u_pixelation_size);
-		uv = to_pixelated_uv(SCREEN_PIXEL_SIZE, uv, u_pixelation_size);
-	}
-	#endif
-
 	vec3 color = texture(screen_texture, uv).rgb;
 
-	#ifdef ENABLE_DITHERING
 	if (u_dither_mode != 0) {
 		color = apply_dithering_by_mode(color, pixel_coord, u_dither_blue_noise_texture);
 	}
-	#endif
 
-	#ifdef ENABLE_PALETTE_MAPPING
 	if (u_palette_shading_enabled) {
 		if (u_palette_use_lut) {
 			color = apply_palette_mapping_lut(color);
@@ -49,7 +28,6 @@ void fragment() {
 			color = apply_palette_mapping_luminance(color);
 		}
 	}
-	#endif
 
 	COLOR = vec4(color, 1.0);
 }

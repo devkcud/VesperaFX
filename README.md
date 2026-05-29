@@ -4,23 +4,19 @@ _Includes: Dithering, palette mapping, pixelation, sharpening, color
 correction, CRT effects, VHS effects, psychedelic warp, and trails._\
 _Modular. Yankable. Yours to break._
 
-**VesperaFX** is a modular, stylized post-processing shader for **Godot 4.4.1**,
-featuring dithering, palette-based color mapping, pixelation, sharpening,
-CRT/VHS effects, psychedelic warp, trails, and flexible color adjustments.\
-Designed for retro visuals, game feel tweaking, and full control over your
-post-FX pipeline.
+**VesperaFX** is a modular, stylized post-processing shader for **Godot 4.4.1**, featuring dithering, palette-based color mapping, pixelation, sharpening, CRT/VHS effects, psychedelic warp, trails, and flexible color adjustments.
+
+Designed for retro visuals, game feel tweaking, and full control over your post-FX pipeline.
 
 > [!IMPORTANT]
-> This repo is not supposed to be a one-size-fits-all solution. It is a
-> toolbox of modular effects you can pick and choose from. Feel free to yank
+> This repo is not supposed to be a one-size-fits-all solution. It is a toolbox of modular effects you can pick and choose from. Feel free to yank
 > ONLY what you need!
 
 <p align="center">
 	<img src="demo/demo.gif" alt="Shader Demo">
 </p>
 
-> Btw, this GIF is actually an older version of the shader. The current one has
-> way more features!
+> Btw, this GIF is actually an older version of the shader. The current one has way more features!
 
 <details>
 <summary><h3>Examples of shading</h3></summary>
@@ -136,29 +132,13 @@ Quite a few! Here's what you get:
   - [ ] Palette mapping for 3D scenes (LUT and RGB)
   - [ ] CRT/VHS effects for 3D scenes
   - [ ] Pixelation and sharpening for 3D scenes
-  - [ ] Depth-aware effects
-    - [ ] Near/Far distortion
-    - [ ] Foggy dithering based on distance
-    - [ ] Color loss and overexposure based on distance
-- [ ] Reflective surfaces support
-  - [ ] Dithering on reflections
-  - [ ] Palette mapping on reflections
-  - [ ] Pixelation and sharpening on reflections
-- [ ] Render class for easy integration
-  - [ ] One-click setup
-  - [ ] Preset management
-  - [ ] Profile saving/loading
-  - [ ] GUI for runtime tweaking
-  - [ ] Controller support for adjustments on the fly
-  - [ ] Animation support for dynamic effects
 - [ ] Demo scenes showcasing various effects and combinations
 - [ ] Precomputed LUT generation tool
 - [ ] RGB palette generation tool
 
 ## 📦 Implementation
 
-1. Clone or copy the shader files into your project. You'll find each effect in
-   the `include/` directory.
+1. Clone or copy the shader files into your project. You'll find each effect in the `include/` directory.
 2. Create a new `.gdshader` file in your project.
 3. Include the modules you want (or everything) using:
 
@@ -167,37 +147,48 @@ Quite a few! Here's what you get:
 #include "res://path/to/include/palette.gdshaderinc"
 ```
 
-4. Copy relevant logic from
-   [`void fragment()` in `main.gdshader`](main.gdshader) or build your own.
+4. Start from [`main.gdshader`](main.gdshader) for a lean palette/dither/pixelation base, or copy one of the focused shaders in [`examples/`](examples/).
+
+## 🧩 Shader Examples
+
+`main.gdshader` is intentionally small. The heavier all-in-one version lives in `examples/all_effects_demo.gdshader` so production shaders can start from a closer fit.
+
+| File                                       | Use when you need                       |
+| ------------------------------------------ | --------------------------------------- |
+| `main.gdshader`                            | Lean palette + dither + pixelation base |
+| `examples/palette_dither.gdshader`         | Cheap retro palette/dither pass         |
+| `examples/palette_lut_transition.gdshader` | Palette/LUT blend transitions           |
+| `examples/pixel_crt.gdshader`              | Pixelation with CRT styling             |
+| `examples/sharpening_only.gdshader`        | Isolated sharpening pass                |
+| `examples/vhs_warp_trails.gdshader`        | VHS, chroma split, warp, and trails     |
+| `examples/color_adjust.gdshader`           | Guarded color correction only           |
+| `examples/all_effects_demo.gdshader`       | Full feature reference / stress test    |
 
 ## 🧪 Usage Notes
 
-- RGB palette matching uses brute-force comparison per pixel. This is slow.
-  Consider using precomputed LUT for better performance.
-- Pixelation + Sharpening may cause artifacts. There's a flag
-  (`#define ALLOW_PIXELATION_SHARPEN_COMBO`) to allow it, but it's not
-  recommended unless you really want it.
-- Effect order defaults to: Dither -> Palette Map. You can flip it by:
-  `#define REVERSE_DITHER_PALETTE_MAPPING`.
-- LUT/texture blending computes both mappings simultaneously. Enable with
-  `#define ALLOW_PALETTE_LUT_BLEND`. May impact performance on low-end GPUs.
-- You may also include `utils.gdshaderinc` for constants and shared helpers.
+- `examples/all_effects_demo.gdshader` is a reference/stress-test shader, not the recommended production default.
+- RGB palette matching uses brute-force comparison per pixel. This is slow. Consider using precomputed LUT for better performance.
+- Pixelation + Sharpening may cause artifacts. There's a flag (`#define ALLOW_PIXELATION_SHARPEN_COMBO`) to allow it, but it's not recommended unless you really want it.
+- Effect order defaults to: Dither -> Palette Map. You can flip it by: `#define REVERSE_DITHER_PALETTE_MAPPING`.
+- LUT/texture blending computes both mappings simultaneously. Enable with `#define ALLOW_PALETTE_LUT_BLEND`. May impact performance on low-end GPUs.
+- You may also include `include/utils.gdshaderinc` for constants and shared helpers.
 
 ## ⚙️ Files
 
-| File                     | Purpose                                  |
-| ------------------------ | ---------------------------------------- |
-| `dither.gdshaderinc`     | Multiple dithering modes                 |
-| `palette.gdshaderinc`    | Palette mapping (RGB, luminance, LUT)    |
-| `pixelation.gdshaderinc` | Pixel grid reduction                     |
-| `sharpening.gdshaderinc` | Sharpen filters (multiple kernels)       |
-| `rendering.gdshaderinc`  | Hue/saturation/contrast/gamma            |
-| `ps1.gdshaderinc`        | PS1-style texture jitter                 |
-| `crt.gdshaderinc`        | CRT effects (vignette, scanlines, warp)  |
-| `crt.gdshaderinc`        | VHS effects (chromatic, tracking, noise) |
-| `warp.gdshaderinc`       | Psychedelic sinusoidal UV warp           |
-| `trails.gdshaderinc`     | Rotating radial trail accumulation       |
-| `utils.gdshaderinc`      | Shared utility functions                 |
+| File                             | Purpose                                  |
+| -------------------------------- | ---------------------------------------- |
+| `include/dither.gdshaderinc`     | Multiple dithering modes                 |
+| `include/palette.gdshaderinc`    | Palette mapping (RGB, luminance, LUT)    |
+| `include/pixelation.gdshaderinc` | Pixel grid reduction                     |
+| `include/sharpening.gdshaderinc` | Sharpen filters (multiple kernels)       |
+| `include/rendering.gdshaderinc`  | Hue/saturation/contrast/gamma            |
+| `include/ps1.gdshaderinc`        | PS1-style texture jitter                 |
+| `include/crt.gdshaderinc`        | CRT effects (vignette, scanlines, warp)  |
+| `include/crt.gdshaderinc`        | VHS effects (chromatic, tracking, noise) |
+| `include/warp.gdshaderinc`       | Psychedelic sinusoidal UV warp           |
+| `include/trails.gdshaderinc`     | Rotating radial trail accumulation       |
+| `include/utils.gdshaderinc`      | Shared utility functions                 |
+| `examples/*.gdshader`            | Focused starter shaders for combinations |
 
 > You can yank one or all. Everything is compartmentalized.
 
@@ -205,13 +196,9 @@ Quite a few! Here's what you get:
 
 This shader is released under the [Mozilla Public License 2.0](LICENSE.txt).
 
-Credit is optional, but always appreciated.\
-Author: André Albanese Junior (@patomcio / @devkcud)
-
 ## 🧯 Support
 
-This isn't a framework, it is a toolbox. If you need help integrating or
-customizing, feel free to reach out via GitHub issues or social media.
+This isn't a framework, it is a toolbox. If you need help integrating or customizing, feel free to reach out via GitHub issues or social media.
 
 ---
 
